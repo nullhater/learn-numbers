@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learn Numbers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel hero-panel">
+        <div class="eyebrow">Числа словами</div>
+        <h1>Тренировка чисел на английском и немецком</h1>
+        <p class="lead">
+          Приложение показывает число цифрами, а ты вводишь его словами. Можно
+          настроить язык, диапазон и количество заданий.
+        </p>
+      </section>
+
+      <section class="panel controls-panel">
+        <div class="section-title">Настройки</div>
+
+        <div class="field-grid">
+          <label class="field">
+            <span>Язык ответа</span>
+            <select id="language">
+              <option value="en">English</option>
+              <option value="de">Deutsch</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Количество заданий</span>
+            <input id="taskCount" type="number" min="1" max="500" value="10" />
+          </label>
+        </div>
+
+        <div class="range-section">
+          <div class="range-header">
+            <span>Диапазон чисел</span>
+            <div class="preset-row" id="presetRow">
+              <button type="button" class="preset-btn" data-min="0" data-max="10">0-10</button>
+              <button type="button" class="preset-btn" data-min="0" data-max="100">0-100</button>
+              <button type="button" class="preset-btn" data-min="10" data-max="100">10-100</button>
+              <button type="button" class="preset-btn" data-min="0" data-max="100000">0-100000</button>
+              <button type="button" class="preset-btn" data-min="0" data-max="9999999">0-9999999</button>
+            </div>
+          </div>
+
+          <div class="field-grid">
+            <label class="field">
+              <span>От</span>
+              <input id="minNumber" type="number" min="0" max="9999999" value="0" />
+            </label>
+
+            <label class="field">
+              <span>До</span>
+              <input id="maxNumber" type="number" min="0" max="9999999" value="100" />
+            </label>
+          </div>
+        </div>
+
+        <div class="button-row">
+          <button id="startButton" class="primary-btn" type="button">Начать тренировку</button>
+          <button id="restartButton" class="ghost-btn" type="button">Сбросить</button>
+        </div>
+
+        <p id="configError" class="message error" hidden></p>
+      </section>
+
+      <section class="panel session-panel">
+        <div class="section-title">Тренировка</div>
+
+        <div id="sessionIdle" class="session-idle">
+          Нажми «Начать тренировку», чтобы получить первое число.
+        </div>
+
+        <div id="sessionActive" class="session-active" hidden>
+          <div class="status-bar">
+            <div class="status-pill">Задание <span id="progressText">1 / 10</span></div>
+            <div class="status-pill">Правильно <span id="correctText">0</span></div>
+            <div class="status-pill">Ошибок <span id="incorrectText">0</span></div>
+          </div>
+
+          <div class="prompt-card">
+            <div class="prompt-label">Напиши это число словами</div>
+            <div id="currentNumber" class="current-number">42</div>
+          </div>
+
+          <label class="field answer-field">
+            <span>Твой ответ</span>
+            <input
+              id="answerInput"
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="Например: forty-two"
+            />
+          </label>
+
+          <div class="button-row">
+            <button id="submitButton" class="primary-btn" type="button">Проверить</button>
+            <button id="skipButton" class="ghost-btn" type="button">Показать ответ</button>
+          </div>
+
+          <p id="feedback" class="message" hidden></p>
+        </div>
+
+        <div id="sessionFinished" class="session-finished" hidden>
+          <h2>Результат</h2>
+          <p id="summaryText" class="summary-text"></p>
+          <div class="summary-grid">
+            <div class="summary-card">
+              <span>Всего</span>
+              <strong id="totalResult">0</strong>
+            </div>
+            <div class="summary-card">
+              <span>Правильно</span>
+              <strong id="correctResult">0</strong>
+            </div>
+            <div class="summary-card">
+              <span>Неправильно</span>
+              <strong id="incorrectResult">0</strong>
+            </div>
+          </div>
+          <button id="playAgainButton" class="primary-btn" type="button">Сыграть еще раз</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
