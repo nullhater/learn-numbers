@@ -1,6 +1,7 @@
 const MAX_VALUE = 9_999_999;
 
 const elements = {
+  uiLanguage: document.getElementById("uiLanguage"),
   language: document.getElementById("language"),
   taskCount: document.getElementById("taskCount"),
   minNumber: document.getElementById("minNumber"),
@@ -29,6 +30,7 @@ const elements = {
 
 const session = {
   isRunning: false,
+  uiLanguage: "ru",
   language: "en",
   totalTasks: 10,
   min: 0,
@@ -39,6 +41,156 @@ const session = {
   currentNumber: null,
   lastConfig: null,
   isLocked: false,
+};
+
+const UI_TEXT = {
+  ru: {
+    documentTitle: "Learn Numbers",
+    eyebrow: "Числа словами",
+    heroTitle: "Тренировка чисел на английском и немецком",
+    heroLead:
+      "Приложение показывает число цифрами, а ты вводишь его словами. Можно настроить язык, диапазон и количество заданий.",
+    settingsTitle: "Настройки",
+    uiLanguageLabel: "Язык интерфейса",
+    uiLangRu: "Русский",
+    uiLangEn: "Английский",
+    uiLangDe: "Немецкий",
+    languageLabel: "Язык ответа",
+    answerLangEn: "Английский",
+    answerLangDe: "Немецкий",
+    taskCountLabel: "Количество заданий",
+    rangeLabel: "Диапазон чисел",
+    minLabel: "От",
+    maxLabel: "До",
+    startButton: "Начать тренировку",
+    resetButton: "Сбросить",
+    trainingTitle: "Тренировка",
+    idleText: "Нажми «Начать тренировку», чтобы получить первое число.",
+    taskStat: "Задание",
+    correctStat: "Правильно",
+    incorrectStat: "Ошибок",
+    promptLabel: "Напиши это число словами",
+    answerLabel: "Твой ответ",
+    submitButton: "Проверить",
+    skipButton: "Показать ответ",
+    resultsTitle: "Результат",
+    totalCard: "Всего",
+    correctCard: "Правильно",
+    incorrectCard: "Неправильно",
+    playAgainButton: "Сыграть еще раз",
+    placeholderEn: "Например: forty-two",
+    placeholderDe: "Например: zweiundvierzig",
+    errorIntegers: "Все настройки должны быть целыми числами.",
+    errorNegative: "Диапазон не может быть отрицательным.",
+    errorBounds: "Левая граница диапазона должна быть меньше или равна правой.",
+    errorMaxValue: `Максимальное число не должно превышать ${MAX_VALUE}.`,
+    errorTaskCount: "Количество заданий должно быть от 1 до 500.",
+    emptyAnswer: "Сначала введи ответ.",
+    successNext: "Верно. Следующее число...",
+    incorrectWithAnswer: "Неверно. Правильный ответ: {answer}",
+    revealAnswer: "Правильный ответ: {answer}",
+    perfectSummary: "Без ошибок. Отличная серия.",
+    summaryWithAccuracy:
+      "Тренировка завершена. Точность: {accuracy}%. Если хочешь, можно сразу пройти еще один раунд.",
+  },
+  en: {
+    documentTitle: "Learn Numbers",
+    eyebrow: "Numbers in Words",
+    heroTitle: "Practice numbers in English and German",
+    heroLead:
+      "The app shows a number in digits, and you type it in words. You can set the language, range, and number of tasks.",
+    settingsTitle: "Settings",
+    uiLanguageLabel: "Interface language",
+    uiLangRu: "Russian",
+    uiLangEn: "English",
+    uiLangDe: "German",
+    languageLabel: "Answer language",
+    answerLangEn: "English",
+    answerLangDe: "German",
+    taskCountLabel: "Number of tasks",
+    rangeLabel: "Number range",
+    minLabel: "From",
+    maxLabel: "To",
+    startButton: "Start training",
+    resetButton: "Reset",
+    trainingTitle: "Training",
+    idleText: "Press “Start training” to get the first number.",
+    taskStat: "Task",
+    correctStat: "Correct",
+    incorrectStat: "Mistakes",
+    promptLabel: "Write this number in words",
+    answerLabel: "Your answer",
+    submitButton: "Check",
+    skipButton: "Show answer",
+    resultsTitle: "Results",
+    totalCard: "Total",
+    correctCard: "Correct",
+    incorrectCard: "Incorrect",
+    playAgainButton: "Play again",
+    placeholderEn: "For example: forty-two",
+    placeholderDe: "For example: zweiundvierzig",
+    errorIntegers: "All settings must be whole numbers.",
+    errorNegative: "The range cannot contain negative numbers.",
+    errorBounds: "The left bound must be less than or equal to the right bound.",
+    errorMaxValue: `The maximum number must not exceed ${MAX_VALUE}.`,
+    errorTaskCount: "The number of tasks must be between 1 and 500.",
+    emptyAnswer: "Enter an answer first.",
+    successNext: "Correct. Moving to the next number...",
+    incorrectWithAnswer: "Incorrect. The correct answer is: {answer}",
+    revealAnswer: "The correct answer is: {answer}",
+    perfectSummary: "No mistakes. Great run.",
+    summaryWithAccuracy:
+      "Training complete. Accuracy: {accuracy}%. You can start another round right away.",
+  },
+  de: {
+    documentTitle: "Learn Numbers",
+    eyebrow: "Zahlen als Woerter",
+    heroTitle: "Zahlentraining auf Englisch und Deutsch",
+    heroLead:
+      "Die App zeigt eine Zahl als Ziffern an, und du schreibst sie als Wort. Sprache, Bereich und Aufgabenzahl lassen sich frei einstellen.",
+    settingsTitle: "Einstellungen",
+    uiLanguageLabel: "Sprache der Oberflaeche",
+    uiLangRu: "Russisch",
+    uiLangEn: "Englisch",
+    uiLangDe: "Deutsch",
+    languageLabel: "Antwortsprache",
+    answerLangEn: "Englisch",
+    answerLangDe: "Deutsch",
+    taskCountLabel: "Anzahl der Aufgaben",
+    rangeLabel: "Zahlenbereich",
+    minLabel: "Von",
+    maxLabel: "Bis",
+    startButton: "Training starten",
+    resetButton: "Zuruecksetzen",
+    trainingTitle: "Training",
+    idleText: "Klicke auf „Training starten“, um die erste Zahl zu bekommen.",
+    taskStat: "Aufgabe",
+    correctStat: "Richtig",
+    incorrectStat: "Fehler",
+    promptLabel: "Schreibe diese Zahl als Wort",
+    answerLabel: "Deine Antwort",
+    submitButton: "Pruefen",
+    skipButton: "Antwort zeigen",
+    resultsTitle: "Ergebnis",
+    totalCard: "Gesamt",
+    correctCard: "Richtig",
+    incorrectCard: "Falsch",
+    playAgainButton: "Noch einmal",
+    placeholderEn: "Zum Beispiel: forty-two",
+    placeholderDe: "Zum Beispiel: zweiundvierzig",
+    errorIntegers: "Alle Einstellungen muessen ganze Zahlen sein.",
+    errorNegative: "Der Bereich darf keine negativen Zahlen enthalten.",
+    errorBounds: "Die linke Grenze muss kleiner oder gleich der rechten Grenze sein.",
+    errorMaxValue: `Die maximale Zahl darf ${MAX_VALUE} nicht ueberschreiten.`,
+    errorTaskCount: "Die Anzahl der Aufgaben muss zwischen 1 und 500 liegen.",
+    emptyAnswer: "Gib zuerst eine Antwort ein.",
+    successNext: "Richtig. Die naechste Zahl kommt...",
+    incorrectWithAnswer: "Falsch. Die richtige Antwort ist: {answer}",
+    revealAnswer: "Die richtige Antwort ist: {answer}",
+    perfectSummary: "Ohne Fehler. Starke Runde.",
+    summaryWithAccuracy:
+      "Training abgeschlossen. Genauigkeit: {accuracy}%. Du kannst sofort eine neue Runde starten.",
+  },
 };
 
 const EN_UNDER_20 = [
@@ -208,6 +360,36 @@ function numberToWords(number, language) {
   return language === "de" ? numberToGerman(number) : numberToEnglish(number);
 }
 
+function detectSystemLanguage() {
+  const browserLanguage =
+    typeof navigator !== "undefined"
+      ? navigator.language || (Array.isArray(navigator.languages) ? navigator.languages[0] : "")
+      : "";
+
+  const normalized = String(browserLanguage).toLowerCase();
+
+  if (normalized.startsWith("ru")) {
+    return "ru";
+  }
+
+  if (normalized.startsWith("de")) {
+    return "de";
+  }
+
+  return "en";
+}
+
+function t(key, params = {}) {
+  const dictionary = UI_TEXT[session.uiLanguage] ?? UI_TEXT.ru;
+  let value = dictionary[key] ?? UI_TEXT.ru[key] ?? key;
+
+  Object.entries(params).forEach(([paramKey, paramValue]) => {
+    value = value.replace(`{${paramKey}}`, String(paramValue));
+  });
+
+  return value;
+}
+
 function normalizeEnglishInput(value) {
   return value
     .toLowerCase()
@@ -235,13 +417,47 @@ function normalizeAnswer(value, language) {
 
 function updateAnswerPlaceholder() {
   elements.answerInput.placeholder =
-    elements.language.value === "de" ? "Например: zweiundvierzig" : "Например: forty-two";
+    elements.language.value === "de" ? t("placeholderDe") : t("placeholderEn");
 }
 
-function setMessage(element, text, type) {
+function applyTranslations() {
+  document.documentElement.lang = session.uiLanguage;
+
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    const key = node.dataset.i18n;
+    node.textContent = t(key);
+  });
+
+  document.title = t("documentTitle");
+  updateAnswerPlaceholder();
+
+  if (!elements.configError.hidden && elements.configError.dataset.i18nKey) {
+    setMessage(
+      elements.configError,
+      t(elements.configError.dataset.i18nKey, elements.configError.dataset.i18nParams ? JSON.parse(elements.configError.dataset.i18nParams) : {}),
+      "error",
+      elements.configError.dataset.i18nKey,
+      elements.configError.dataset.i18nParams ? JSON.parse(elements.configError.dataset.i18nParams) : {},
+    );
+  }
+
+  if (!elements.feedback.hidden && elements.feedback.dataset.i18nKey) {
+    const params = elements.feedback.dataset.i18nParams ? JSON.parse(elements.feedback.dataset.i18nParams) : {};
+    setMessage(elements.feedback, t(elements.feedback.dataset.i18nKey, params), elements.feedback.dataset.messageType, elements.feedback.dataset.i18nKey, params);
+  }
+
+  if (!elements.sessionFinished.hidden) {
+    updateSummaryText();
+  }
+}
+
+function setMessage(element, text, type, i18nKey = "", params = {}) {
   element.hidden = false;
   element.textContent = text;
   element.classList.remove("success", "error");
+  element.dataset.i18nKey = i18nKey;
+  element.dataset.i18nParams = JSON.stringify(params);
+  element.dataset.messageType = type || "";
   if (type) {
     element.classList.add(type);
   }
@@ -251,6 +467,9 @@ function hideMessage(element) {
   element.hidden = true;
   element.textContent = "";
   element.classList.remove("success", "error");
+  delete element.dataset.i18nKey;
+  delete element.dataset.i18nParams;
+  delete element.dataset.messageType;
 }
 
 function updatePresetButtons() {
@@ -271,23 +490,23 @@ function readConfig() {
   const language = elements.language.value;
 
   if (!Number.isInteger(min) || !Number.isInteger(max) || !Number.isInteger(totalTasks)) {
-    throw new Error("Все настройки должны быть целыми числами.");
+    throw new Error("errorIntegers");
   }
 
   if (min < 0 || max < 0) {
-    throw new Error("Диапазон не может быть отрицательным.");
+    throw new Error("errorNegative");
   }
 
   if (min > max) {
-    throw new Error("Левая граница диапазона должна быть меньше или равна правой.");
+    throw new Error("errorBounds");
   }
 
   if (max > MAX_VALUE) {
-    throw new Error(`Максимальное число не должно превышать ${MAX_VALUE}.`);
+    throw new Error("errorMaxValue");
   }
 
   if (totalTasks < 1 || totalTasks > 500) {
-    throw new Error("Количество заданий должно быть от 1 до 500.");
+    throw new Error("errorTaskCount");
   }
 
   return { min, max, totalTasks, language };
@@ -331,7 +550,7 @@ function startTraining() {
 
     nextTask();
   } catch (error) {
-    setMessage(elements.configError, error.message, "error");
+    setMessage(elements.configError, t(error.message), "error", error.message);
   }
 }
 
@@ -366,11 +585,13 @@ function finishTraining() {
   elements.correctResult.textContent = String(session.correctAnswers);
   elements.incorrectResult.textContent = String(session.incorrectAnswers);
 
+  updateSummaryText();
+}
+
+function updateSummaryText() {
   const accuracy = Math.round((session.correctAnswers / session.totalTasks) * 100);
   elements.summaryText.textContent =
-    accuracy === 100
-      ? "Без ошибок. Отличная серия."
-      : `Тренировка завершена. Точность: ${accuracy}%. Если хочешь, можно сразу пройти еще один раунд.`;
+    accuracy === 100 ? t("perfectSummary") : t("summaryWithAccuracy", { accuracy });
 }
 
 function submitAnswer() {
@@ -380,7 +601,7 @@ function submitAnswer() {
 
   const userValue = elements.answerInput.value.trim();
   if (!userValue) {
-    setMessage(elements.feedback, "Сначала введи ответ.", "error");
+    setMessage(elements.feedback, t("emptyAnswer"), "error", "emptyAnswer");
     return;
   }
 
@@ -390,14 +611,16 @@ function submitAnswer() {
 
   if (normalizedUser === normalizedCorrect) {
     session.correctAnswers += 1;
-    setMessage(elements.feedback, "Верно. Следующее число...", "success");
+    setMessage(elements.feedback, t("successNext"), "success", "successNext");
     updateScoreboard();
   } else {
     session.incorrectAnswers += 1;
     setMessage(
       elements.feedback,
-      `Неверно. Правильный ответ: ${correctText}`,
+      t("incorrectWithAnswer", { answer: correctText }),
       "error",
+      "incorrectWithAnswer",
+      { answer: correctText },
     );
     updateScoreboard();
   }
@@ -416,8 +639,10 @@ function skipTask() {
   session.incorrectAnswers += 1;
   setMessage(
     elements.feedback,
-    `Правильный ответ: ${correctText}`,
+    t("revealAnswer", { answer: correctText }),
     "error",
+    "revealAnswer",
+    { answer: correctText },
   );
   updateScoreboard();
   session.isLocked = true;
@@ -453,7 +678,16 @@ elements.presetRow.addEventListener("click", (event) => {
 elements.minNumber.addEventListener("input", updatePresetButtons);
 elements.maxNumber.addEventListener("input", updatePresetButtons);
 elements.language.addEventListener("change", updateAnswerPlaceholder);
+elements.uiLanguage.addEventListener("change", () => {
+  session.uiLanguage = elements.uiLanguage.value;
+  applyTranslations();
+});
+
+const systemLanguage = detectSystemLanguage();
+elements.uiLanguage.value = systemLanguage;
+session.uiLanguage = systemLanguage;
 
 updatePresetButtons();
 updateAnswerPlaceholder();
+applyTranslations();
 resetTrainingView();
