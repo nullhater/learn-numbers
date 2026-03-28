@@ -297,6 +297,69 @@ select:focus {
   margin: 22px 0;
 }
 
+.mistakes-section {
+  margin: 28px 0 22px;
+}
+
+.mistakes-section h3 {
+  margin: 0 0 14px;
+  font-size: 1.1rem;
+}
+
+.mistakes-list {
+  display: grid;
+  gap: 14px;
+}
+
+.mistake-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(79, 54, 32, 0.06);
+  border: 1px solid rgba(79, 54, 32, 0.08);
+}
+
+.mistake-number {
+  margin-bottom: 12px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.mistake-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 10px;
+  align-items: start;
+  line-height: 1.6;
+}
+
+.mistake-row + .mistake-row {
+  margin-top: 8px;
+}
+
+.mistake-label {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.mistake-value {
+  word-break: break-word;
+}
+
+.diff-wrong {
+  color: var(--error);
+  font-weight: 800;
+  background: rgba(171, 47, 47, 0.1);
+  border-radius: 6px;
+  padding: 0 1px;
+}
+
+.diff-missing {
+  color: var(--error);
+  font-weight: 800;
+  border-bottom: 2px solid rgba(171, 47, 47, 0.45);
+}
+
 .summary-card {
   padding: 20px;
   border-radius: 20px;
@@ -327,6 +390,11 @@ select:focus {
   .field-grid,
   .summary-grid {
     grid-template-columns: 1fr;
+  }
+
+  .mistake-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   .panel {

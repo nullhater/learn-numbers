@@ -25,6 +25,8 @@ const elements = {
   totalResult: document.getElementById("totalResult"),
   correctResult: document.getElementById("correctResult"),
   incorrectResult: document.getElementById("incorrectResult"),
+  mistakesSection: document.getElementById("mistakesSection"),
+  mistakesList: document.getElementById("mistakesList"),
   presetRow: document.getElementById("presetRow"),
 };
 
@@ -41,6 +43,7 @@ const session = {
   currentNumber: null,
   lastConfig: null,
   isLocked: false,
+  mistakes: [],
 };
 
 const UI_TEXT = {
@@ -77,7 +80,12 @@ const UI_TEXT = {
     totalCard: "Всего",
     correctCard: "Правильно",
     incorrectCard: "Неправильно",
+    mistakesTitle: "Ошибки",
     playAgainButton: "Сыграть еще раз",
+    yourAnswerLabel: "Твой ответ",
+    correctAnswerLabel: "Правильный ответ",
+    numberLabel: "Число",
+    skippedAnswer: "пропущено",
     placeholderEn: "Например: forty-two",
     placeholderDe: "Например: zweiundvierzig",
     errorIntegers: "Все настройки должны быть целыми числами.",
@@ -126,7 +134,12 @@ const UI_TEXT = {
     totalCard: "Total",
     correctCard: "Correct",
     incorrectCard: "Incorrect",
+    mistakesTitle: "Mistakes",
     playAgainButton: "Play again",
+    yourAnswerLabel: "Your answer",
+    correctAnswerLabel: "Correct answer",
+    numberLabel: "Number",
+    skippedAnswer: "skipped",
     placeholderEn: "For example: forty-two",
     placeholderDe: "For example: zweiundvierzig",
     errorIntegers: "All settings must be whole numbers.",
@@ -175,7 +188,12 @@ const UI_TEXT = {
     totalCard: "Gesamt",
     correctCard: "Richtig",
     incorrectCard: "Falsch",
+    mistakesTitle: "Fehler",
     playAgainButton: "Noch einmal",
+    yourAnswerLabel: "Deine Antwort",
+    correctAnswerLabel: "Richtige Antwort",
+    numberLabel: "Zahl",
+    skippedAnswer: "uebersprungen",
     placeholderEn: "Zum Beispiel: forty-two",
     placeholderDe: "Zum Beispiel: zweiundvierzig",
     errorIntegers: "Alle Einstellungen muessen ganze Zahlen sein.",
@@ -390,6 +408,97 @@ function t(key, params = {}) {
   return value;
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function buildDiffMarkup(input, reference) {
+  const source = Array.from(String(input));
+  const target = Array.from(String(reference));
+  const rows = source.length + 1;
+  const cols = target.length + 1;
+  const dp = Array.from({ length: rows }, () => Array(cols).fill(0));
+
+  for (let row = source.length - 1; row >= 0; row -= 1) {
+    for (let col = target.length - 1; col >= 0; col -= 1) {
+      if (source[row] === target[col]) {
+        dp[row][col] = dp[row + 1][col + 1] + 1;
+      } else {
+        dp[row][col] = Math.max(dp[row + 1][col], dp[row][col + 1]);
+      }
+    }
+  }
+
+  let row = 0;
+  let col = 0;
+  let html = "";
+
+  while (row < source.length && col < target.length) {
+    if (source[row] === target[col]) {
+      html += escapeHtml(source[row]);
+      row += 1;
+      col += 1;
+      continue;
+    }
+
+    if (dp[row + 1][col] >= dp[row][col + 1]) {
+      html += `<span class="diff-wrong">${escapeHtml(source[row])}</span>`;
+      row += 1;
+      continue;
+    }
+
+    html += `<span class="diff-missing">${escapeHtml(target[col])}</span>`;
+    col += 1;
+  }
+
+  while (row < source.length) {
+    html += `<span class="diff-wrong">${escapeHtml(source[row])}</span>`;
+    row += 1;
+  }
+
+  while (col < target.length) {
+    html += `<span class="diff-missing">${escapeHtml(target[col])}</span>`;
+    col += 1;
+  }
+
+  return html || escapeHtml(input);
+}
+
+function renderMistakes() {
+  if (session.mistakes.length === 0) {
+    elements.mistakesSection.hidden = true;
+    elements.mistakesList.innerHTML = "";
+    return;
+  }
+
+  elements.mistakesSection.hidden = false;
+  elements.mistakesList.innerHTML = session.mistakes
+    .map((mistake) => {
+      const enteredMarkup = mistake.userAnswer
+        ? buildDiffMarkup(mistake.userAnswer, mistake.correctAnswer)
+        : escapeHtml(t("skippedAnswer"));
+      return `
+        <article class="mistake-card">
+          <div class="mistake-number">${t("numberLabel")}: ${escapeHtml(mistake.number)}</div>
+          <div class="mistake-row">
+            <div class="mistake-label">${t("yourAnswerLabel")}</div>
+            <div class="mistake-value">${enteredMarkup}</div>
+          </div>
+          <div class="mistake-row">
+            <div class="mistake-label">${t("correctAnswerLabel")}</div>
+            <div class="mistake-value">${escapeHtml(mistake.correctAnswer)}</div>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
 function normalizeEnglishInput(value) {
   return value
     .toLowerCase()
@@ -448,6 +557,7 @@ function applyTranslations() {
 
   if (!elements.sessionFinished.hidden) {
     updateSummaryText();
+    renderMistakes();
   }
 }
 
@@ -519,11 +629,14 @@ function randomInt(min, max) {
 function resetTrainingView() {
   session.isRunning = false;
   session.isLocked = false;
+  session.mistakes = [];
   hideMessage(elements.feedback);
   elements.sessionIdle.hidden = false;
   elements.sessionActive.hidden = true;
   elements.sessionFinished.hidden = true;
   elements.answerInput.value = "";
+  elements.mistakesSection.hidden = true;
+  elements.mistakesList.innerHTML = "";
 }
 
 function startTraining() {
@@ -542,6 +655,7 @@ function startTraining() {
     session.currentNumber = null;
     session.lastConfig = config;
     session.isLocked = false;
+    session.mistakes = [];
 
     elements.sessionIdle.hidden = true;
     elements.sessionFinished.hidden = true;
@@ -586,6 +700,7 @@ function finishTraining() {
   elements.incorrectResult.textContent = String(session.incorrectAnswers);
 
   updateSummaryText();
+  renderMistakes();
 }
 
 function updateSummaryText() {
@@ -615,6 +730,11 @@ function submitAnswer() {
     updateScoreboard();
   } else {
     session.incorrectAnswers += 1;
+    session.mistakes.push({
+      number: session.currentNumber,
+      userAnswer: userValue,
+      correctAnswer: correctText,
+    });
     setMessage(
       elements.feedback,
       t("incorrectWithAnswer", { answer: correctText }),
@@ -637,6 +757,11 @@ function skipTask() {
 
   const correctText = numberToWords(session.currentNumber, session.language);
   session.incorrectAnswers += 1;
+  session.mistakes.push({
+    number: session.currentNumber,
+    userAnswer: "",
+    correctAnswer: correctText,
+  });
   setMessage(
     elements.feedback,
     t("revealAnswer", { answer: correctText }),
