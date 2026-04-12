@@ -157,12 +157,12 @@ const UI_TEXT = {
   },
   de: {
     documentTitle: "Learn Numbers",
-    eyebrow: "Zahlen als Woerter",
+    eyebrow: "Zahlen als Wörter",
     heroTitle: "Zahlentraining auf Englisch und Deutsch",
     heroLead:
       "Die App zeigt eine Zahl als Ziffern an, und du schreibst sie als Wort. Sprache, Bereich und Aufgabenzahl lassen sich frei einstellen.",
     settingsTitle: "Einstellungen",
-    uiLanguageLabel: "Sprache der Oberflaeche",
+    uiLanguageLabel: "Sprache der Oberfläche",
     uiLangRu: "Russisch",
     uiLangEn: "Englisch",
     uiLangDe: "Deutsch",
@@ -174,7 +174,7 @@ const UI_TEXT = {
     minLabel: "Von",
     maxLabel: "Bis",
     startButton: "Training starten",
-    resetButton: "Zuruecksetzen",
+    resetButton: "Zurücksetzen",
     trainingTitle: "Training",
     idleText: "Klicke auf „Training starten“, um die erste Zahl zu bekommen.",
     taskStat: "Aufgabe",
@@ -182,7 +182,7 @@ const UI_TEXT = {
     incorrectStat: "Fehler",
     promptLabel: "Schreibe diese Zahl als Wort",
     answerLabel: "Deine Antwort",
-    submitButton: "Pruefen",
+    submitButton: "Prüfen",
     skipButton: "Antwort zeigen",
     resultsTitle: "Ergebnis",
     totalCard: "Gesamt",
@@ -193,16 +193,16 @@ const UI_TEXT = {
     yourAnswerLabel: "Deine Antwort",
     correctAnswerLabel: "Richtige Antwort",
     numberLabel: "Zahl",
-    skippedAnswer: "uebersprungen",
+    skippedAnswer: "übersprungen",
     placeholderEn: "Zum Beispiel: forty-two",
     placeholderDe: "Zum Beispiel: zweiundvierzig",
-    errorIntegers: "Alle Einstellungen muessen ganze Zahlen sein.",
+    errorIntegers: "Alle Einstellungen müssen ganze Zahlen sein.",
     errorNegative: "Der Bereich darf keine negativen Zahlen enthalten.",
     errorBounds: "Die linke Grenze muss kleiner oder gleich der rechten Grenze sein.",
-    errorMaxValue: `Die maximale Zahl darf ${MAX_VALUE} nicht ueberschreiten.`,
+    errorMaxValue: `Die maximale Zahl darf ${MAX_VALUE} nicht überschreiten.`,
     errorTaskCount: "Die Anzahl der Aufgaben muss zwischen 1 und 500 liegen.",
     emptyAnswer: "Gib zuerst eine Antwort ein.",
-    successNext: "Richtig. Die naechste Zahl kommt...",
+    successNext: "Richtig. Die nächste Zahl kommt...",
     incorrectWithAnswer: "Falsch. Die richtige Antwort ist: {answer}",
     revealAnswer: "Die richtige Antwort ist: {answer}",
     perfectSummary: "Ohne Fehler. Starke Runde.",
@@ -253,17 +253,17 @@ const DE_UNDER_20 = {
   2: "zwei",
   3: "drei",
   4: "vier",
-  5: "fuenf",
+  5: "fünf",
   6: "sechs",
   7: "sieben",
   8: "acht",
   9: "neun",
   10: "zehn",
   11: "elf",
-  12: "zwoelf",
+  12: "zwölf",
   13: "dreizehn",
   14: "vierzehn",
-  15: "fuenfzehn",
+  15: "fünfzehn",
   16: "sechzehn",
   17: "siebzehn",
   18: "achtzehn",
@@ -272,9 +272,9 @@ const DE_UNDER_20 = {
 
 const DE_TENS = {
   20: "zwanzig",
-  30: "dreissig",
+  30: "dreißig",
   40: "vierzig",
-  50: "fuenfzig",
+  50: "fünfzig",
   60: "sechzig",
   70: "siebzig",
   80: "achtzig",
@@ -417,16 +417,35 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function toDiffUnits(value, language) {
+  return Array.from(String(value)).flatMap((character, index) => {
+    const lower = character.toLowerCase();
+    let normalized = lower;
+
+    if (language === "de") {
+      normalized = normalized
+        .replace(/ä/g, "ae")
+        .replace(/ö/g, "oe")
+        .replace(/ü/g, "ue")
+        .replace(/ß/g, "ss");
+    }
+
+    const units = Array.from(normalized).filter((unit) => /[a-z]/.test(unit));
+    return units.map((unit) => ({ unit, originalIndex: index }));
+  });
+}
+
 function buildDiffMarkup(input, reference) {
-  const source = Array.from(String(input));
-  const target = Array.from(String(reference));
+  const originalCharacters = Array.from(String(input));
+  const source = toDiffUnits(input, session.language);
+  const target = toDiffUnits(reference, session.language);
   const rows = source.length + 1;
   const cols = target.length + 1;
   const dp = Array.from({ length: rows }, () => Array(cols).fill(0));
 
   for (let row = source.length - 1; row >= 0; row -= 1) {
     for (let col = target.length - 1; col >= 0; col -= 1) {
-      if (source[row] === target[col]) {
+      if (source[row].unit === target[col].unit) {
         dp[row][col] = dp[row + 1][col + 1] + 1;
       } else {
         dp[row][col] = Math.max(dp[row + 1][col], dp[row][col + 1]);
@@ -436,37 +455,41 @@ function buildDiffMarkup(input, reference) {
 
   let row = 0;
   let col = 0;
-  let html = "";
+  const matchedSourceUnits = Array(source.length).fill(false);
 
   while (row < source.length && col < target.length) {
-    if (source[row] === target[col]) {
-      html += escapeHtml(source[row]);
+    if (source[row].unit === target[col].unit) {
+      matchedSourceUnits[row] = true;
       row += 1;
       col += 1;
-      continue;
-    }
-
-    if (dp[row + 1][col] >= dp[row][col + 1]) {
-      html += `<span class="diff-wrong">${escapeHtml(source[row])}</span>`;
+    } else if (dp[row + 1][col] >= dp[row][col + 1]) {
       row += 1;
-      continue;
+    } else {
+      col += 1;
     }
-
-    html += `<span class="diff-missing">${escapeHtml(target[col])}</span>`;
-    col += 1;
   }
 
-  while (row < source.length) {
-    html += `<span class="diff-wrong">${escapeHtml(source[row])}</span>`;
-    row += 1;
-  }
+  const totalsByCharacter = Array(originalCharacters.length).fill(0);
+  const matchedByCharacter = Array(originalCharacters.length).fill(0);
 
-  while (col < target.length) {
-    html += `<span class="diff-missing">${escapeHtml(target[col])}</span>`;
-    col += 1;
-  }
+  source.forEach((item, index) => {
+    totalsByCharacter[item.originalIndex] += 1;
+    if (matchedSourceUnits[index]) {
+      matchedByCharacter[item.originalIndex] += 1;
+    }
+  });
 
-  return html || escapeHtml(input);
+  return originalCharacters
+    .map((character, index) => {
+      if (totalsByCharacter[index] === 0) {
+        return escapeHtml(character);
+      }
+
+      return matchedByCharacter[index] === totalsByCharacter[index]
+        ? escapeHtml(character)
+        : `<span class="diff-wrong">${escapeHtml(character)}</span>`;
+    })
+    .join("");
 }
 
 function renderMistakes() {
