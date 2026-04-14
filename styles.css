@@ -136,8 +136,10 @@ button {
   font: inherit;
 }
 
-input,
-select {
+input[type="number"],
+input[type="text"],
+select,
+textarea {
   width: 100%;
   padding: 14px 16px;
   border: 1px solid rgba(79, 54, 32, 0.15);
@@ -147,12 +149,48 @@ select {
   transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
-input:focus,
-select:focus {
+input[type="number"]:focus,
+input[type="text"]:focus,
+select:focus,
+textarea:focus {
   outline: none;
   border-color: rgba(215, 93, 57, 0.7);
   box-shadow: 0 0 0 4px rgba(215, 93, 57, 0.12);
   transform: translateY(-1px);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 112px;
+}
+
+.toggle-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  font-weight: 700;
+}
+
+.toggle-field input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.custom-numbers-section {
+  margin-top: 16px;
+}
+
+.field-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.range-section.disabled {
+  opacity: 0.56;
+  pointer-events: none;
 }
 
 .range-section {

@@ -4,6 +4,9 @@ const elements = {
   uiLanguage: document.getElementById("uiLanguage"),
   language: document.getElementById("language"),
   taskCount: document.getElementById("taskCount"),
+  useCustomNumbers: document.getElementById("useCustomNumbers"),
+  customNumbersSection: document.getElementById("customNumbersSection"),
+  customNumbersInput: document.getElementById("customNumbersInput"),
   minNumber: document.getElementById("minNumber"),
   maxNumber: document.getElementById("maxNumber"),
   startButton: document.getElementById("startButton"),
@@ -37,6 +40,8 @@ const session = {
   totalTasks: 10,
   min: 0,
   max: 100,
+  useCustomNumbers: false,
+  customNumbers: [],
   currentTaskIndex: 0,
   correctAnswers: 0,
   incorrectAnswers: 0,
@@ -44,6 +49,7 @@ const session = {
   lastConfig: null,
   isLocked: false,
   mistakes: [],
+  taskQueue: [],
 };
 
 const UI_TEXT = {
@@ -62,6 +68,10 @@ const UI_TEXT = {
     answerLangEn: "Английский",
     answerLangDe: "Немецкий",
     taskCountLabel: "Количество заданий",
+    customNumbersToggle: "Свой набор чисел",
+    customNumbersLabel: "Числа через запятую или пробел",
+    customNumbersHint: "В этом режиме будут использоваться только указанные числа.",
+    customNumbersPlaceholder: "Например: 7, 12, 45 100 999",
     rangeLabel: "Диапазон чисел",
     minLabel: "От",
     maxLabel: "До",
@@ -93,6 +103,8 @@ const UI_TEXT = {
     errorBounds: "Левая граница диапазона должна быть меньше или равна правой.",
     errorMaxValue: `Максимальное число не должно превышать ${MAX_VALUE}.`,
     errorTaskCount: "Количество заданий должно быть от 1 до 500.",
+    errorCustomNumbersRequired: "Добавь хотя бы одно число для собственного режима.",
+    errorCustomNumbersInvalid: `Можно использовать только целые числа от 0 до ${MAX_VALUE}.`,
     emptyAnswer: "Сначала введи ответ.",
     successNext: "Верно. Следующее число...",
     incorrectWithAnswer: "Неверно. Правильный ответ: {answer}",
@@ -116,6 +128,10 @@ const UI_TEXT = {
     answerLangEn: "English",
     answerLangDe: "German",
     taskCountLabel: "Number of tasks",
+    customNumbersToggle: "Custom set of numbers",
+    customNumbersLabel: "Numbers separated by commas or spaces",
+    customNumbersHint: "Only these numbers will be used in this mode.",
+    customNumbersPlaceholder: "For example: 7, 12, 45 100 999",
     rangeLabel: "Number range",
     minLabel: "From",
     maxLabel: "To",
@@ -147,6 +163,8 @@ const UI_TEXT = {
     errorBounds: "The left bound must be less than or equal to the right bound.",
     errorMaxValue: `The maximum number must not exceed ${MAX_VALUE}.`,
     errorTaskCount: "The number of tasks must be between 1 and 500.",
+    errorCustomNumbersRequired: "Add at least one number for custom mode.",
+    errorCustomNumbersInvalid: `Only whole numbers from 0 to ${MAX_VALUE} are allowed.`,
     emptyAnswer: "Enter an answer first.",
     successNext: "Correct. Moving to the next number...",
     incorrectWithAnswer: "Incorrect. The correct answer is: {answer}",
@@ -170,6 +188,10 @@ const UI_TEXT = {
     answerLangEn: "Englisch",
     answerLangDe: "Deutsch",
     taskCountLabel: "Anzahl der Aufgaben",
+    customNumbersToggle: "Eigene Zahlenliste",
+    customNumbersLabel: "Zahlen durch Komma oder Leerzeichen getrennt",
+    customNumbersHint: "In diesem Modus werden nur diese Zahlen verwendet.",
+    customNumbersPlaceholder: "Zum Beispiel: 7, 12, 45 100 999",
     rangeLabel: "Zahlenbereich",
     minLabel: "Von",
     maxLabel: "Bis",
@@ -201,6 +223,8 @@ const UI_TEXT = {
     errorBounds: "Die linke Grenze muss kleiner oder gleich der rechten Grenze sein.",
     errorMaxValue: `Die maximale Zahl darf ${MAX_VALUE} nicht überschreiten.`,
     errorTaskCount: "Die Anzahl der Aufgaben muss zwischen 1 und 500 liegen.",
+    errorCustomNumbersRequired: "Fuege mindestens eine Zahl fuer den eigenen Modus hinzu.",
+    errorCustomNumbersInvalid: `Es sind nur ganze Zahlen von 0 bis ${MAX_VALUE} erlaubt.`,
     emptyAnswer: "Gib zuerst eine Antwort ein.",
     successNext: "Richtig. Die nächste Zahl kommt...",
     incorrectWithAnswer: "Falsch. Die richtige Antwort ist: {answer}",
@@ -560,6 +584,10 @@ function applyTranslations() {
     node.textContent = t(key);
   });
 
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => {
+    node.placeholder = t(node.dataset.i18nPlaceholder);
+  });
+
   document.title = t("documentTitle");
   updateAnswerPlaceholder();
 
@@ -616,11 +644,40 @@ function updatePresetButtons() {
   });
 }
 
+function updateCustomNumbersVisibility() {
+  const isCustomMode = elements.useCustomNumbers.checked;
+  elements.customNumbersSection.hidden = !isCustomMode;
+  document.querySelector(".range-section").classList.toggle("disabled", isCustomMode);
+}
+
+function parseCustomNumbers(rawValue) {
+  const parts = rawValue
+    .split(/[\s,;]+/)
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    throw new Error("errorCustomNumbersRequired");
+  }
+
+  const values = parts.map((value) => Number(value));
+  const hasInvalidValue = values.some(
+    (value) => !Number.isInteger(value) || value < 0 || value > MAX_VALUE,
+  );
+
+  if (hasInvalidValue) {
+    throw new Error("errorCustomNumbersInvalid");
+  }
+
+  return [...new Set(values)];
+}
+
 function readConfig() {
   const min = Number(elements.minNumber.value);
   const max = Number(elements.maxNumber.value);
   const totalTasks = Number(elements.taskCount.value);
   const language = elements.language.value;
+  const useCustomNumbers = elements.useCustomNumbers.checked;
 
   if (!Number.isInteger(min) || !Number.isInteger(max) || !Number.isInteger(totalTasks)) {
     throw new Error("errorIntegers");
@@ -642,17 +699,70 @@ function readConfig() {
     throw new Error("errorTaskCount");
   }
 
-  return { min, max, totalTasks, language };
+  const customNumbers = useCustomNumbers
+    ? parseCustomNumbers(elements.customNumbersInput.value)
+    : [];
+
+  return { min, max, totalTasks, language, useCustomNumbers, customNumbers };
 }
 
-function randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
+function shuffleArray(values) {
+  const result = [...values];
+
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [result[index], result[randomIndex]] = [result[randomIndex], result[index]];
+  }
+
+  return result;
+}
+
+function buildNonRepeatingTaskQueue(sourceNumbers, totalTasks) {
+  const uniqueNumbers = [...new Set(sourceNumbers)];
+  const queue = [];
+
+  while (queue.length < totalTasks) {
+    let batch = shuffleArray(uniqueNumbers);
+
+    if (queue.length > 0 && batch.length > 1 && queue[queue.length - 1] === batch[0]) {
+      batch = [...batch.slice(1), batch[0]];
+    }
+
+    queue.push(...batch);
+  }
+
+  return queue.slice(0, totalTasks);
+}
+
+function buildRangeTaskQueue(min, max, totalTasks) {
+  const rangeSize = max - min + 1;
+
+  if (totalTasks > rangeSize) {
+    const fullRange = Array.from({ length: rangeSize }, (_, index) => min + index);
+    return buildNonRepeatingTaskQueue(fullRange, totalTasks);
+  }
+
+  const selected = new Set();
+  while (selected.size < totalTasks) {
+    selected.add(Math.floor(Math.random() * rangeSize) + min);
+  }
+
+  return shuffleArray([...selected]);
+}
+
+function buildTaskQueue(config) {
+  if (config.useCustomNumbers) {
+    return buildNonRepeatingTaskQueue(config.customNumbers, config.totalTasks);
+  }
+
+  return buildRangeTaskQueue(config.min, config.max, config.totalTasks);
 }
 
 function resetTrainingView() {
   session.isRunning = false;
   session.isLocked = false;
   session.mistakes = [];
+  session.taskQueue = [];
   hideMessage(elements.feedback);
   elements.sessionIdle.hidden = false;
   elements.sessionActive.hidden = true;
@@ -672,6 +782,8 @@ function startTraining() {
     session.totalTasks = config.totalTasks;
     session.min = config.min;
     session.max = config.max;
+    session.useCustomNumbers = config.useCustomNumbers;
+    session.customNumbers = config.customNumbers;
     session.currentTaskIndex = 0;
     session.correctAnswers = 0;
     session.incorrectAnswers = 0;
@@ -679,6 +791,7 @@ function startTraining() {
     session.lastConfig = config;
     session.isLocked = false;
     session.mistakes = [];
+    session.taskQueue = buildTaskQueue(config);
 
     elements.sessionIdle.hidden = true;
     elements.sessionFinished.hidden = true;
@@ -703,7 +816,7 @@ function nextTask() {
     return;
   }
 
-  session.currentNumber = randomInt(session.min, session.max);
+  session.currentNumber = session.taskQueue[session.currentTaskIndex];
   session.isLocked = false;
   elements.currentNumber.textContent = String(session.currentNumber);
   elements.answerInput.value = "";
@@ -826,6 +939,7 @@ elements.presetRow.addEventListener("click", (event) => {
 elements.minNumber.addEventListener("input", updatePresetButtons);
 elements.maxNumber.addEventListener("input", updatePresetButtons);
 elements.language.addEventListener("change", updateAnswerPlaceholder);
+elements.useCustomNumbers.addEventListener("change", updateCustomNumbersVisibility);
 elements.uiLanguage.addEventListener("change", () => {
   session.uiLanguage = elements.uiLanguage.value;
   applyTranslations();
@@ -838,4 +952,5 @@ session.uiLanguage = systemLanguage;
 updatePresetButtons();
 updateAnswerPlaceholder();
 applyTranslations();
+updateCustomNumbersVisibility();
 resetTrainingView();
